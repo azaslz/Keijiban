@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>掲示板</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #333;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    .post-form {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      border: 1px solid #f0f0f0;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: #333;
+      font-size: 0.95rem;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #4a90e2;
+      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+      font-family: inherit;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+      color: white;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-clear {
+      background: #f0f0f0;
+      color: #666;
+    }
+
+    .btn-clear:hover {
+      background: #e0e0e0;
+    }
+
+    .messages-section {
+      margin-bottom: 30px;
+    }
+
+    .messages-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .messages-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .message-count {
+      background: #4a90e2;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .messages-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message-item {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      border-left: 4px solid #4a90e2;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      border: 1px solid #f0f0f0;
+      border-left: 4px solid #4a90e2;
+      transition: all 0.3s ease;
+    }
+
+    .message-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 12px;
+    }
+
+    .message-author {
+      font-weight: 600;
+      color: #333;
+      font-size: 0.95rem;
+    }
+
+    .message-time {
+      font-size: 0.85rem;
+      color: #999;
+    }
+
+    .message-body {
+      color: #555;
+      line-height: 1.6;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      border: 4px solid #f0f0f0;
+      border-top: 4px solid #4a90e2;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .error {
+      background: #fee;
+      border: 1px solid #fcc;
+      border-radius: 8px;
+      padding: 16px;
+      color: #c33;
+      margin-bottom: 16px;
+    }
+
+    .success {
+      background: #efe;
+      border: 1px solid #cfc;
+      border-radius: 8px;
+      padding: 16px;
+      color: #3a3;
+      margin-bottom: 16px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+    }
+
+    .status-message {
+      min-height: 24px;
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      .post-form,
+      .message-item {
+        border-radius: 8px;
+        padding: 16px;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📝 掲示板</h1>
+      <p class="subtitle">みんなで自由に投稿しよう</p>
+    </header>
+
+    <div class="post-form">
+      <div id="statusMessage" class="status-message"></div>
+      
+      <form id="postForm">
+        <div class="form-group">
+          <label for="name">お名前（省略可）</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            placeholder="匿名でも大丈夫です"
+            maxlength="50"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="message">メッセージ</label>
+          <textarea
+            id="message"
+            name="message"
+            placeholder="あなたのメッセージをここに入力してください..."
+            required
+          ></textarea>
+        </div>
+
+        <div class="button-group">
+          <button type="submit" class="btn-submit">投稿する</button>
+          <button type="reset" class="btn-clear">クリア</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="messages-section">
+      <div class="messages-header">
+        <div class="messages-title">投稿一覧</div>
+        <div class="message-count" id="messageCount">0</div>
+      </div>
+
+      <div id="messagesList" class="messages-list">
+        <div class="loading">
+          <div class="spinner"></div>
+          <p style="margin-top: 16px;">読み込み中...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ⚠️ ここに GAS のウェブアプリ URL を設定してください
+    // GAS エディタ → デプロイ → ウェブアプリ → 最新のデプロイ URL をコピーして以下に貼り付けます
+    const GAS_ENDPOINT = '';
+
+    if (!GAS_ENDPOINT) {
+      document.getElementById('messagesList').innerHTML = `
+        <div class="error">
+          ⚠️ GAS エンドポイント URL が設定されていません。<br>
+          keijiban.html の GAS_ENDPOINT 変数を設定してください。
+        </div>
+      `;
+    }
+
+    let allMessages = [];
+
+    async function fetchMessages() {
+      try {
+        const url = `${GAS_ENDPOINT}?mode=list`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.status === 'ok') {
+          allMessages = data.messages || [];
+          renderMessages();
+        } else {
+          showError(data.message || 'メッセージ取得に失敗しました');
+        }
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+        showError('通信エラーが発生しました');
+      }
+    }
+
+    function renderMessages() {
+      const container = document.getElementById('messagesList');
+      document.getElementById('messageCount').textContent = allMessages.length;
+
+      if (allMessages.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">💬</div>
+            <p>まだ投稿がありません。最初の投稿者になってください！</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = allMessages.map(msg => `
+        <div class="message-item">
+          <div class="message-header">
+            <span class="message-author">${escapeHtml(msg.author)}</span>
+            <span class="message-time">${msg.createdAt}</span>
+          </div>
+          <div class="message-body">${escapeHtml(msg.body)}</div>
+        </div>
+      `).join('');
+    }
+
+    async function postMessage(name, message) {
+      try {
+        const params = new URLSearchParams({
+          mode: 'post',
+          name: name,
+          message: message
+        });
+
+        const url = `${GAS_ENDPOINT}?${params.toString()}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.status === 'ok') {
+          document.getElementById('postForm').reset();
+          showSuccess('投稿しました！');
+          await fetchMessages();
+        } else {
+          showError(data.message || '投稿に失敗しました');
+        }
+      } catch (error) {
+        console.error('Error posting message:', error);
+        showError('通信エラーが発生しました');
+      }
+    }
+
+    function showSuccess(message) {
+      const el = document.getElementById('statusMessage');
+      el.innerHTML = `<div class="success">✓ ${message}</div>`;
+      setTimeout(() => {
+        el.innerHTML = '';
+      }, 3000);
+    }
+
+    function showError(message) {
+      const el = document.getElementById('statusMessage');
+      el.innerHTML = `<div class="error">✗ ${message}</div>`;
+    }
+
+    function escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    document.getElementById('postForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const message = document.getElementById('message').value;
+
+      if (!message.trim()) {
+        showError('メッセージを入力してください');
+        return;
+      }
+
+      postMessage(name, message);
+    });
+
+    // 初回ロード
+    fetchMessages();
+
+    // 30秒ごとにメッセージを更新
+    setInterval(fetchMessages, 30000);
+  </script>
+</body>
+</html>
